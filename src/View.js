@@ -11,6 +11,9 @@ export default function View() {
   const [view , setView]= useState();
  
  useEffect(()=>{
+   if(!id) {
+      navigate('/Produits')
+    }
   axios.post('http://localhost/my-app/public/PHP/users/profile.php' , {id} )
   .then((res)=>{
     if(res.data.status === 'success'){

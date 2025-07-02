@@ -32,6 +32,9 @@ export default function Update() {
   console.log(view)
 
   useEffect(() => {
+    if(!id) {
+      navigate('/Produits')
+    }
     axios.post('http://localhost/my-app/public/PHP/users/profile.php', { id })
       .then((res) => {
         if (res.data.status === 'success') {

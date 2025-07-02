@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CardDate from "./CardDate";
 import { Link, useNavigate } from "react-router-dom";
-import { FaBasketShopping } from "react-icons/fa6";
-import Flag from 'react-world-flags';
+
 import { IoIosClose } from "react-icons/io";
 import Swal from "sweetalert2";
 import { easeInOut, motion } from "framer-motion"
@@ -21,11 +20,6 @@ export default function Produits() {
     const navigate = useNavigate()
 
 
-    function ko(s) {
-        setSearch(s);
-        setPaniersl(paniersl.filter(r => r.ID === s));
-    }
-
     useEffect(() => {
         const filtrage = () => {
             setDatesfilrer(Dates.filter((date) => date.Name.toLowerCase().includes(Search.toLowerCase())));
@@ -33,27 +27,27 @@ export default function Produits() {
         filtrage();
     }, [Search]);
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const res = await fetch("https://belkahla-lamsila.ct.ws/Select.php");
-                const data = await res.json();
-                if (data.status === "success") {
-                    setDates(data.dates);
-                    setDatesfilrer(data.dates);
-                } else {
-                    setMessage(data.message);
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
+    async function fetchData() {
+        try {
+            const res = await fetch("https://belkahla-lamsila.ct.ws/Select.php");
+            const data = await res.json();
+            if (data.status === "success") {
+                setDates(data.dates);
+                setDatesfilrer(data.dates);
+            } else {
+                setMessage(data.message);
             }
+        } catch (error) {
+            console.error("Error fetching data:", error);
         }
-
+    }
+    
+    useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     useEffect(() => {
-        
+
     }, [userID]);
 
     const [panier, setPanier] = useState([]);
@@ -74,14 +68,14 @@ export default function Produits() {
                 Swal.fire({
                     title: 'يجب تسجيل الدخول ',
                     icon: 'error',
-                    customClass:{
-                        title:'font-[Almarai] font-bold',
-                        confirmButton:'bg-green-500'
-                        
+                    customClass: {
+                        title: 'font-[Almarai] font-bold',
+                        confirmButton: 'bg-green-500'
+
                     },
-                    confirmButtonText:'حسنا',
-                    
-                    
+                    confirmButtonText: 'حسنا',
+
+
 
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -95,7 +89,7 @@ export default function Produits() {
                     customClass: {
                         title: 'font-[Almarai] text-[#4b2d1f]',
                         confirmButton: 'bg-green-500',
-                        oninvalid : "font-[Almarai]"
+                        oninvalid: "font-[Almarai]"
                     },
                     inputAttributes: {
                         autocapitalize: "off",
@@ -111,16 +105,16 @@ export default function Produits() {
                         try {
                             // تحويل الإدخال إلى رقم
                             const weight = parseFloat(number);
-                
+
                             // التحقق من صحة الإدخال
                             if (!number || isNaN(weight) || weight <= 0) {
                                 throw new Error("يرجى إدخال وزن صحيح.");
                             }
-                
+
                             // إضافة المنتج إلى السلة
                             setPaniersl([...paniersl, { ...find, weight }]);
                             setShowCart(true);
-                
+
                         } catch (error) {
                             Swal.showValidationMessage(error.message);
                         }
@@ -135,24 +129,10 @@ export default function Produits() {
                         });
                     }
                 });
-                
-                
+
+
             }
 
-            // const userInput = prompt(`الاسم: ${find.Name}\nالوزن بلكيلوغرام:`);
-            /*  if (userInput) {
-                 const weight = parseFloat(userInput);
-                 if (!isNaN(weight)) {
-                     alert(`تم الاضافة للسلة`);
- 
-                     setPaniersl([...paniersl, { ...find, weight }]);
-                     setShowCart(true);
-                 } else {
-                     alert("يرجى إدخال وزن صحيح.");
-                 }
-             } else {
-                 alert("لم يتم إضافة العنصر.");
-             } */
         } else {
             Swal.fire({
                 title: "العنصر موجود مسبقا",
@@ -187,17 +167,17 @@ export default function Produits() {
                 try {
                     // تحويل الإدخال إلى رقم
                     const weight = parseFloat(number);
-        
+
                     // التحقق من أن الوزن صالح (رقم موجب أكبر من صفر)
                     if (!number || isNaN(weight) || weight <= 0) {
                         throw new Error("يرجى إدخال وزن صحيح.");
                     }
-        
+
                     // تحديث بيانات القائمة إذا كان الرقم صالحًا
                     setPaniersl(paniersl.map((item) =>
                         item.ID === id ? { ...item, weight } : item
                     ));
-        
+
                 } catch (error) {
                     Swal.showValidationMessage(error.message);
                 }
@@ -212,8 +192,8 @@ export default function Produits() {
                 });
             }
         });
-        
-       
+
+
     };
 
     // Save paniersl to localStorage whenever it changes

@@ -9,7 +9,6 @@ export default function TableDates() {
   const [refresh, setRefresh] = useState(false);
 
 
-  const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -57,64 +56,69 @@ export default function TableDates() {
       })
   }
 
-  
+  useEffect(() => {
+    if (msg) {
+      console.error(msg);
+    }
+  }, [msg]);
+
 
   return (
     <div className="flex flex-col mt-[4em] sm:mt-[5em] items-center justify-center min-h-screen bg-[#4b2d1f]">
- 
 
-  {/* Space Between Header and Table */}
-  <div className="mt-8 w-full flex items-center justify-center">
-    <div className="overflow-x-auto sm:w-3/4 w-[90%] rounded-lg shadow-lg bg-[#a67c52]">
-      <table className="w-full text-center text-white rounded-lg">
-        <thead className="bg-[#5c3b28] text-sm sm:text-lg">
-          <tr>
-            <th className="p-3 sm:p-5">تحكم</th>
-            <th className="p-3 sm:p-5">الثمن</th>
-            <th className="p-3 sm:p-5">الدولة</th>
-            <th className="p-3 sm:p-5">الإسم</th>
-            <th className="p-3 sm:p-5">#</th>
-          </tr>
-        </thead>
 
-        <tbody>
-          {Data.length > 0 ? (
-            Data.map((e) => (
-              <tr key={e.ID} className="hover:bg-[#8e5f3d] transition-all duration-200">
-                <td className="p-3 sm:p-5 border-b border-[#7e5438]">
-                  <Link to={`/UpdateDate/${e.ID}`}>
-                    <button
-                      className="bg-[#4b2d1f] hover:bg-[#613a27] text-white py-1 px-3 rounded"
-                      onClick={() => Update(e.ID)}
-                    >
-                      تعديل
-                    </button>
-                  </Link>
-                  <button
-                    className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded ml-2"
-                    onClick={() => Delete(e.ID)}
-                  >
-                    حذف
-                  </button>
-                </td>
-                <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Price} DH</td>
-                <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Origin}</td>
-                <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Name}</td>
-                <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.ID}</td>
+      {/* Space Between Header and Table */}
+      <div className="mt-8 w-full flex items-center justify-center">
+        <div className="overflow-x-auto sm:w-3/4 w-[90%] rounded-lg shadow-lg bg-[#a67c52]">
+          <table className="w-full text-center text-white rounded-lg">
+            <thead className="bg-[#5c3b28] text-sm sm:text-lg">
+              <tr>
+                <th className="p-3 sm:p-5">تحكم</th>
+                <th className="p-3 sm:p-5">الثمن</th>
+                <th className="p-3 sm:p-5">الدولة</th>
+                <th className="p-3 sm:p-5">الإسم</th>
+                <th className="p-3 sm:p-5">#</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" className="p-5 text-lg">
-                لا توجد بيانات
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            </thead>
+
+            <tbody>
+              {Data.length > 0 ? (
+                Data.map((e) => (
+                  <tr key={e.ID} className="hover:bg-[#8e5f3d] transition-all duration-200">
+                    <td className="p-3 sm:p-5 border-b border-[#7e5438]">
+                      <Link to={`/UpdateDate/${e.ID}`}>
+                        <button
+                          className="bg-[#4b2d1f] hover:bg-[#613a27] text-white py-1 px-3 rounded"
+                          onClick={() => Update(e.ID)}
+                        >
+                          تعديل
+                        </button>
+                      </Link>
+                      <button
+                        className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded ml-2"
+                        onClick={() => Delete(e.ID)}
+                      >
+                        حذف
+                      </button>
+                    </td>
+                    <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Price} DH</td>
+                    <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Origin}</td>
+                    <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.Name}</td>
+                    <td className="p-3 sm:p-5 border-b border-[#7e5438]">{e.ID}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="p-5 text-lg">
+                    لا توجد بيانات
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
 
 
