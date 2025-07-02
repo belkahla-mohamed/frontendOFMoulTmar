@@ -8,25 +8,25 @@ export default function View() {
   const { id } = useParams();
 
   const navigate = useNavigate();
-  const [view , setView]= useState();
- 
- useEffect(()=>{
-   if(!id) {
+  const [view, setView] = useState();
+
+  useEffect(() => {
+    if (!id) {
       navigate('/Produits')
     }
-  axios.post('http://localhost/my-app/public/PHP/users/profile.php' , {id} )
-  .then((res)=>{
-    if(res.data.status === 'success'){
-      setView(res.data.user)
+    axios.post('http://localhost/my-app/public/PHP/users/profile.php', { id })
+      .then((res) => {
+        if (res.data.status === 'success') {
+          setView(res.data.user)
 
-    }
-  })
- },[])
+        }
+      })
+  }, [id, navigate])
 
 
- function Modifier(){
-  navigate(`/Update/${id}`)
- }
+  function Modifier() {
+    navigate(`/Update/${id}`)
+  }
 
   // Si l'utilisateur n'existe pas
   if (!view) {
@@ -74,7 +74,7 @@ export default function View() {
             عودة
           </button>
           <button
-          onClick={Modifier} 
+            onClick={Modifier}
             className="bg-[#f39c12] text-white font-bold px-4 py-2 rounded-full hover:bg-[#d35400] transition duration-300"
           >
             تحديث

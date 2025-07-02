@@ -25,8 +25,9 @@ export default function Produits() {
             setDatesfilrer(Dates.filter((date) => date.Name.toLowerCase().includes(Search.toLowerCase())));
         };
         filtrage();
-    }, [Search]);
+    }, [Search,Dates]);
 
+    useEffect(() => {
     async function fetchData() {
         try {
             const res = await fetch("https://belkahla-lamsila.ct.ws/Select.php");
@@ -41,10 +42,10 @@ export default function Produits() {
             console.error("Error fetching data:", error);
         }
     }
-    
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+
+    fetchData(); // ✅ داخل useEffect
+}, []); // ✅ مصفوفة فاضية
+
 
     useEffect(() => {
 

@@ -41,7 +41,7 @@ export default function Update() {
           setView(res.data.user)
         }
       })
-  }, [])
+  }, [id, navigate])
 
 
   return (
