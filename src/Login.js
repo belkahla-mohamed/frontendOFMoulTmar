@@ -15,7 +15,7 @@ export default function Login(){
     const formData = new FormData();
 
     function Login(){
-        if(login.userName && login.password){
+        if(login.email && login.password){
             for(const [key , value] of Object.entries(login) )
                 {
                     formData.append(key , value);
