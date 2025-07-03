@@ -17,7 +17,7 @@ export default function Register() {
                 formData.append(key , value);
             }
 
-            axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/signup', formData)
+          axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/signup', Register)
             .then((res)=>{
                 if(res.data.status === 'success'){
                     setmsg(res.data.message)
