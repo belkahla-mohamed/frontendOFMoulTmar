@@ -30,7 +30,7 @@ export default function Produits() {
     useEffect(() => {
     async function fetchData() {
         try {
-            const res = await fetch("https://belkahla-lamsila.ct.ws/Select.php");
+            const res = await fetch("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates");
             const data = await res.json();
             if (data.status === "success") {
                 setDates(data.dates);

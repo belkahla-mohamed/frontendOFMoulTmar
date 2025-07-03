@@ -17,7 +17,7 @@ export default function Register() {
                 formData.append(key , value);
             }
 
-             axios.post('https://belkahla-lamsila.ct.ws/users/signup.php', formData)
+            axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/signup', formData)
             .then((res)=>{
                 if(res.data.status === 'success'){
                     setmsg(res.data.message)

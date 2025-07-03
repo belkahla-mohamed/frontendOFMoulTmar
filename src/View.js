@@ -14,7 +14,7 @@ export default function View() {
     if (!id) {
       navigate('/Produits')
     }
-    axios.post('http://localhost/my-app/public/PHP/users/profile.php', { id })
+    axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/profile', { id })
       .then((res) => {
         if (res.data.status === 'success') {
           setView(res.data.user)

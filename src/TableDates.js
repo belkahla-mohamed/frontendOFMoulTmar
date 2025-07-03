@@ -12,7 +12,7 @@ export default function TableDates() {
 
   useEffect(() => {
     axios
-      .get("http://localhost/my-app/public/PHP/select.php")
+      .get('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates')
       .then((res) => {
         if (res.data.status === "success") {
           setData(res.data.dates);
@@ -30,7 +30,7 @@ export default function TableDates() {
 
   function Delete(ID) {
     axios
-      .post("http://localhost/my-app/public/PHP/delet.php", { id: ID })
+      .delete(`https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates/${ID}`)
       .then((res) => {
         if (res.data.status === "success") {
           alert(res.data.message);
@@ -45,7 +45,7 @@ export default function TableDates() {
       });
   }
   function Update(ID) {
-    axios.post("http://localhost/my-app/public/PHP/delet.php", { idUp: ID })
+    axios.put(`https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates/${ID}`)
       .then((res) => {
         if (res.data.status === "success") {
           alert(res.data.message);

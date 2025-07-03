@@ -14,7 +14,7 @@ export default function Header() {
 
   function logout() {
     setAction(!action);
-    axios.post('http://localhost/my-app/public/PHP/users/logout.php')
+    axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/logout')
     .then((res)=>{
       if(res.data.status === 'success'){
         sessionStorage.removeItem('userID')
