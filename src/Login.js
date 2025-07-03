@@ -25,7 +25,8 @@ export default function Login(){
                 .then((res)=>{
                     if(res.data.status === 'success'){
                         setmsg(res.data.message)
-                        sessionStorage.setItem('userID', res.data.userID);
+                        sessionStorage.setItem('userID', res.data.user._id);
+                        sessionStorage.setItem('token', res.data.token);
                         navigate('/')
 
                     }else{
