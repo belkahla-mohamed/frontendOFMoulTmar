@@ -7,7 +7,7 @@ const PaymentPage = () => {
 
   const [paniersl, setPaniersl] = useState(() => {
     const saved = localStorage.getItem("paniersl");
-    return saved ? JSON.parse(saved) : [];
+    return saved ? saved : [];
   });
 
   const totalPrice = paniersl.reduce((total, item) => total + (item.Price * item.weight), 0);

@@ -8,7 +8,7 @@ import {easeInOut, motion} from "framer-motion";
 export default function Header() {
 
   const [action, setAction] = useState(true);
-  const userID = JSON.parse(sessionStorage.getItem('userID'));
+  const userID = sessionStorage.getItem('userID');
   const locate = useLocation();
   const [render, setRender] = useState(false)
 

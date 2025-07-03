@@ -13,10 +13,10 @@ export default function Produits() {
     const [paniersl, setPaniersl] = useState(() => {
         // Load paniersl data from localStorage when component mounts
         const saved = localStorage.getItem("paniersl");
-        return saved ? JSON.parse(saved) : [];
+        return saved ? saved : [];
     });
     const [showCart, setShowCart] = useState(false);
-    const userID = JSON.parse(sessionStorage.getItem('userID'));
+    const userID = sessionStorage.getItem('userID');
     const navigate = useNavigate()
 
 
