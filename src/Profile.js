@@ -8,7 +8,7 @@ export default function Profile() {
   const { id } = useParams();
 
   const navigate = useNavigate();
-  const [view, setView] = useState();
+  const [user, setUser] = useState();
 
   useEffect(() => {
     if (!id) {
@@ -19,7 +19,7 @@ export default function Profile() {
       })
       .then((res) => {
         if (res.data.status === 'success') {
-          setView(res.data.user)
+          setUser(res.data.user)
         }
       })
   }, [id, navigate])
@@ -30,7 +30,7 @@ export default function Profile() {
   }
 
   // Si l'utilisateur n'existe pas
-  if (!view) {
+  if (!user) {
     return (
       <div className="flex justify-center items-center h-screen bg-[#f7efe6]">
         <p className="text-2xl text-red-600 font-semibold">⚠ Utilisateur non trouvé</p>
@@ -46,23 +46,23 @@ export default function Profile() {
         </h1>
         <div className="space-y-4 w-full font-[Almarai] flex flex-col justify-center items-center">
           <p className="text-lg w-[90%] sm:w-[80%] flex justify-between font-medium text-gray-800">
-            <span>{view.firstName}</span>
+            <span>{user.firstName}</span>
             <span className="font-bold text-[#3a8e3a]">: الإسم</span>
           </p>
           <p className="text-lg w-[90%] sm:w-[80%] flex justify-between font-medium text-gray-800">
-            <span>{view.lastName}</span>
+            <span>{user.lastName}</span>
             <span className="font-bold text-[#3a8e3a]">: اللقب</span>
           </p>
           <p className="text-lg w-[90%] sm:w-[80%] flex justify-between font-medium text-gray-800">
-            <span>{view.userName}</span>
+            <span>{user.userName}</span>
             <span className="font-bold text-[#3a8e3a]">: اسم المستخدم</span>
           </p>
           <p className="text-lg w-[90%] sm:w-[80%] flex justify-between font-medium text-gray-800">
-            <span>{view.phone}</span>
+            <span>{user.phone}</span>
             <span className="font-bold text-[#3a8e3a]">: الرقم الهاتف</span>
           </p>
           <p className="text-lg w-[90%] sm:w-[80%] flex justify-between font-medium text-gray-800">
-            <span>{view.email}</span>
+            <span>{user.email}</span>
             <span className="font-bold text-[#3a8e3a]">: البريد الإلكتروني</span>
           </p>
         </div>
