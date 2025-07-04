@@ -33,7 +33,7 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="flex justify-center items-center h-screen bg-[#f7efe6]">
-        <p className="text-2xl text-red-600 font-semibold">⚠ Utilisateur non trouvé</p>
+        <p className="text-2xl text-red-600 font-semibold">⚠ المستخدم غير موجود</p>
       </div>
     );
   }

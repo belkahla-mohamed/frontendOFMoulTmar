@@ -6,39 +6,49 @@ import { useNavigate, useParams } from "react-router-dom";
 
 export default function Update() {
   const { id } = useParams()
-  const formData = new FormData();
-
   const navigate = useNavigate();
-  const [view, setView] = useState();
+  const [infos, setInfos] = useState();
   const [message, setMessage] = useState();
 
   function edit() {
-    if(!view.newPassword){
-      formData.append('newPassword' , view.password)
+    if(!infos?.oldPassword){
+      setMessage("الرجاء إدخال كلمة السر القديمة");
+      return;
     }
-    for (const [key, value] of Object.entries(view)) {
-      formData.append(key, value);
-    }
-    axios.post('http://localhost/my-app/public/PHP/users/update.php', formData)
-    .then((res) => {
-      if (res.data.status === 'success') {
-        navigate(`/View/${id}`)
-      }else{
-        setMessage(res.data.message)
-      }
-    })
-    
-  }
-  console.log(view)
-
-  useEffect(() => {
-    if(!id) {
-      navigate('/Produits')
-    }
-    axios.post('http://localhost/my-app/public/PHP/users/profile.php', { id })
+    axios.put(`https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/update/${id}`,
+      infos,
+      { headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` } }
+    )
       .then((res) => {
         if (res.data.status === 'success') {
-          setView(res.data.user)
+          navigate(`/Profile/${id}`)
+        } else {
+          setMessage(res.data.message)
+        }
+      })
+      .catch((err)=> {
+         if (err.response) {
+        // السيرفر جاوب ولكن فيه مشكل
+        setMessage(err.response.data.message); // هنا توصلك رسالة الخطأ
+      } else {
+        // مشكل آخر: الشبكة أو السيرفر طايح
+        setMessage("حدث خطأ غير متوقع");
+      }
+      })
+
+  }
+  console.log(infos)
+
+  useEffect(() => {
+    if (!id) {
+      navigate('/Produits')
+    }
+    axios.get(`https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/profile/${id}`,
+      { headers: { Authorization: `Bearer ${sessionStorage.getItem('token')}` } }
+    )
+      .then((res) => {
+        if (res.data.status === 'success') {
+          setInfos(res.data.user)
         }
       })
   }, [id, navigate])
@@ -50,52 +60,52 @@ export default function Update() {
         <h1 className="text-3xl font-extrabold mb-5 text-gray-800">تفاصيل المستخدم</h1>
         <input
           type="text"
-          defaultValue={view?.firstName}
+          defaultValue={infos?.firstName}
           className="w-full p-3 mb-4 text-end border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="الاسم"
-          onChange={(e) => setView({ ...view, firstName: e.target.value })}
+          onChange={(e) => setInfos({ ...infos, firstName: e.target.value })}
         />
         <input
           type="text"
-          defaultValue={view?.lastName}
+          defaultValue={infos?.lastName}
           className="w-full p-3 mb-4 text-end border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="الاسم الأول"
-          onChange={(e) => setView({ ...view, lastName: e.target.value })}
+          onChange={(e) => setInfos({ ...infos, lastName: e.target.value })}
         />
         <input
           type="text"
-          defaultValue={view?.userName}
+          defaultValue={infos?.userName}
           className="w-full p-3 mb-4 text-end border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="الاسم الأول"
-          onChange={(e) => setView({ ...view, userName: e.target.value })}
+          onChange={(e) => setInfos({ ...infos, userName: e.target.value })}
         />
         <input
-          type="number"
-          defaultValue={view?.phone}
+          type="tel"
+          defaultValue={infos?.phone}
           className="w-full p-3 mb-4 text-end border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="رقم الهاتف"
-          onChange={(e) => setView({ ...view, phone: Number(e.target.value) })}
+          onChange={(e) => setInfos({ ...infos, phone: Number(e.target.value) })}
         />
         <input
           type="email"
-          defaultValue={view?.email}
+          defaultValue={infos?.email}
           className="w-full text-end p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="البريد الإلكتروني"
-          onChange={(e) => setView({ ...view, email: e.target.value })}
+          onChange={(e) => setInfos({ ...infos, email: e.target.value })}
         />
         <input
           type="password"
-          
+
           className="w-full text-end p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="كلمة السر الخاص بك"
-          onChange={(e) => setView({ ...view, password: e.target.value })}
+          onChange={(e) => setInfos({ ...infos, oldPassword: e.target.value })}
+          required
         />
         <input
           type="password"
-          
           className="w-full text-end p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="كلمة السر جديدة"
-          onChange={(e) => setView({ ...view, newPassword: e.target.value })} 
+          onChange={(e) => setInfos({ ...infos, newPassword: e.target.value })}
         />
         <button
           onClick={edit}
@@ -103,7 +113,7 @@ export default function Update() {
         >
           تعديل
         </button>
-        {message && <p>{message}</p>}
+        {message && <p className="text-red-500 mt-4">{message}</p>}
       </div>
     </div>
   );
