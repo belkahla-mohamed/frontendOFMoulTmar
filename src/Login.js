@@ -31,6 +31,15 @@ export default function Login() {
                         setmsg(res.data.message)
                     }
                 })
+                .catch((err) => {
+                    if (err.response) {
+                        // السيرفر جاوب ولكن فيه مشكل
+                        setmsg(err.response.data.message); // هنا توصلك رسالة الخطأ
+                    } else {
+                        // مشكل آخر: الشبكة أو السيرفر طايح
+                        setmsg("حدث خطأ غير متوقع");
+                    }
+                })
 
         } else {
             setmsg(`⚠️يجب ملء جميع الحقول `)

@@ -5,21 +5,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { IoIosClose } from "react-icons/io";
 import Swal from "sweetalert2";
 import { easeInOut, motion } from "framer-motion"
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+
 export default function Produits() {
     const [Message, setMessage] = useState('');
     const [Dates, setDates] = useState([]);
     const [datesfilrer, setDatesfilrer] = useState([]);
     const [Search, setSearch] = useState("");
-    const [paniersl, setPaniersl] = useState(() => {
-        // Load paniersl data from localStorage when component mounts
-        const saved = localStorage.getItem("paniersl");
-        return saved ? saved : [];
-    });
+    const [cartItems, setCartItems] = useState([]); // Backend cart
     const [showCart, setShowCart] = useState(false);
-    const userID = sessionStorage.getItem('userID');
+    const token = sessionStorage.getItem('token');
+    const [userID, setUserID] = useState(null);
     const navigate = useNavigate()
 
-
+    // Fetch dates
     useEffect(() => {
         const filtrage = () => {
             setDatesfilrer(Dates.filter((date) => date.Name.toLowerCase().includes(Search.toLowerCase())));
@@ -28,157 +28,90 @@ export default function Produits() {
     }, [Search,Dates]);
 
     useEffect(() => {
-    async function fetchData() {
-        try {
-            const res = await fetch("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates");
-            const data = await res.json();
-            if (data.status === "success") {
-                setDates(data.dates);
-                setDatesfilrer(data.dates);
-            } else {
-                setMessage(data.message);
+        async function fetchData() {
+            try {
+                const res = await fetch("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/dates");
+                const data = await res.json();
+                if (data.status === "success") {
+                    setDates(data.dates);
+                    setDatesfilrer(data.dates);
+                } else {
+                    setMessage(data.message);
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
             }
-        } catch (error) {
-            console.error("Error fetching data:", error);
         }
-    }
-
-    fetchData(); // ✅ داخل useEffect
-}, []); // ✅ مصفوفة فاضية
-
+        fetchData();
+    }, []);
 
     useEffect(() => {
+        if(token){
+            setUserID(jwtDecode(token).id);
+        }
+    }, [token]);
 
+    // Fetch cart from backend (use POST to send userID in body)
+    useEffect(() => {
+        async function fetchCart() {
+            if (!userID) return;
+            try {
+                const res = await axios.post("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart", { userID });
+                if (res.data.items) setCartItems(res.data.items);
+                else if (res.data.message) setMessage(res.data.message);
+            } catch (err) {
+                setMessage("خطأ في تحميل السلة");
+                console.error("Error fetching cart:", err);
+            }
+        }
+        fetchCart();
     }, [userID]);
 
-    const [panier, setPanier] = useState([]);
-
-    function AddPanier(id) {
-        const find = Dates.find((date) => date.ID === id);
-        if (find && !panier.some((e) => e.ID === id)) {
-            setPanier([...panier, find]);
-        }
-    }
-
-    function pn(id) {
-
-        const find = Dates.find((date) => date.ID === id);
-
-        if (find && !paniersl.some((e) => e.ID === id)) {
-            if (!userID) {
-                Swal.fire({
-                    title: 'يجب تسجيل الدخول ',
-                    icon: 'error',
-                    customClass: {
-                        title: 'font-[Almarai] font-bold',
-                        confirmButton: 'bg-green-500'
-
-                    },
-                    confirmButtonText: 'حسنا',
-
-
-
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        navigate('/login')
-                    }
-                })
-            } else {
-                Swal.fire({
-                    title: `الاسم: ${find.Name}<br> الوزن بالكيلوغرام:`,
-                    input: "number",
-                    customClass: {
-                        title: 'font-[Almarai] text-[#4b2d1f]',
-                        confirmButton: 'bg-green-500',
-                        oninvalid: "font-[Almarai]"
-                    },
-                    inputAttributes: {
-                        autocapitalize: "off",
-                        placeholder: "يرجى إدخال رقم",  // ← إضافة نص توضيحي بالعربية
-                        oninvalid: "this.setCustomValidity('يرجى إدخال رقم صالح')",
-                        oninput: "this.setCustomValidity('')" // ← إعادة ضبط الرسالة عند إدخال قيمة صحيحة
-                    },
-                    showCancelButton: true,
-                    cancelButtonText: 'إلغــاء',
-                    confirmButtonText: "أضــف",
-                    showLoaderOnConfirm: true,
-                    preConfirm: async (number) => {
-                        try {
-                            // تحويل الإدخال إلى رقم
-                            const weight = parseFloat(number);
-
-                            // التحقق من صحة الإدخال
-                            if (!number || isNaN(weight) || weight <= 0) {
-                                throw new Error("يرجى إدخال وزن صحيح.");
-                            }
-
-                            // إضافة المنتج إلى السلة
-                            setPaniersl([...paniersl, { ...find, weight }]);
-                            setShowCart(true);
-
-                        } catch (error) {
-                            Swal.showValidationMessage(error.message);
-                        }
-                    },
-                    allowOutsideClick: () => !Swal.isLoading()
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: `تم الإضافة للسلة`,
-                            icon: "success",
-                            draggable: true
-                        });
-                    }
-                });
-
-
-            }
-
-        } else {
+    // Add to cart (backend)
+    async function pn(id) {
+        const find = Dates.find((date) => date._id === id);
+        if (!find) return;
+        if (!userID) {
             Swal.fire({
-                title: "العنصر موجود مسبقا",
-                icon: "error",
-                draggable: true
+                title: 'يجب تسجيل الدخول ',
+                icon: 'error',
+                customClass: { title: 'font-[Almarai] font-bold', confirmButton: 'bg-green-500' },
+                confirmButtonText: 'حسنا',
+            }).then((result) => {
+                if (result.isConfirmed) navigate('/login')
             });
+            return;
         }
-    }
-
-    const totalPrice = paniersl.reduce((total, item) => total + (item.Price * item.weight), 0);
-
-    const removeFromCart = (id) => {
-        setPaniersl(paniersl.filter(item => item.ID !== id));
-    };
-
-    const updateWeight = (id) => {
+        // Prompt for weight
         Swal.fire({
-            title: ":أدخل الوزن الجديد بالكيلوغرام",
+            title: `الاسم: ${find.Name}<br> الوزن بالكيلوغرام:`,
             input: "number",
-            customClass: {
-                title: 'font-[Almarai] text-[#4b2d1f]',
-                confirmButton: 'bg-green-500'
-            },
+            customClass: { title: 'font-[Almarai] text-[#4b2d1f]', confirmButton: 'bg-green-500' },
             inputAttributes: {
-                autocapitalize: "off"
+                autocapitalize: "off",
+                placeholder: "يرجى إدخال رقم",
+                oninvalid: "this.setCustomValidity('يرجى إدخال رقم صالح')",
+                oninput: "this.setCustomValidity('')"
             },
             showCancelButton: true,
             cancelButtonText: 'إلغــاء',
-            confirmButtonText: "تحديث",
+            confirmButtonText: "أضــف",
             showLoaderOnConfirm: true,
             preConfirm: async (number) => {
                 try {
-                    // تحويل الإدخال إلى رقم
                     const weight = parseFloat(number);
-
-                    // التحقق من أن الوزن صالح (رقم موجب أكبر من صفر)
-                    if (!number || isNaN(weight) || weight <= 0) {
-                        throw new Error("يرجى إدخال وزن صحيح.");
-                    }
-
-                    // تحديث بيانات القائمة إذا كان الرقم صالحًا
-                    setPaniersl(paniersl.map((item) =>
-                        item.ID === id ? { ...item, weight } : item
-                    ));
-
+                    if (!number || isNaN(weight) || weight <= 0) throw new Error("يرجى إدخال وزن صحيح.");
+                    // Call backend to add item, send userID and dateId
+                    const res = await axios.post("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart/add", {
+                        userID,
+                        dateId: find._id, // use MongoDB _id
+                        name: find.Name,
+                        price: find.Price,
+                        imagePath: find.ImagePath,
+                        weight
+                    });
+                    if (res.data.cart && res.data.cart.items) setCartItems(res.data.cart.items);
+                    setShowCart(true);
                 } catch (error) {
                     Swal.showValidationMessage(error.message);
                 }
@@ -186,21 +119,60 @@ export default function Produits() {
             allowOutsideClick: () => !Swal.isLoading()
         }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({
-                    title: `تم تحديث الوزن`,
-                    icon: "success",
-                    draggable: true
-                });
+                Swal.fire({ title: `تم الإضافة للسلة`, icon: "success", draggable: true });
             }
         });
+    }
 
-
+    // Remove from cart (backend)
+    const removeFromCart = async (id) => {
+        try {
+            // Send userID and dateId in body using axios.delete with data
+            const res = await axios.delete("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart/remove", {
+                data: { userID, dateId: id }
+            });
+            if (res.data.cart && res.data.cart.items) setCartItems(res.data.cart.items);
+        } catch (err) {
+            console.error("Error removing from cart:", err);
+        }
     };
 
-    // Save paniersl to localStorage whenever it changes
-    useEffect(() => {
-        localStorage.setItem("paniersl", JSON.stringify(paniersl));
-    }, [paniersl]);
+    // Update weight (backend)
+    const updateWeight = (id) => {
+        Swal.fire({
+            title: ":أدخل الوزن الجديد بالكيلوغرام",
+            input: "number",
+            customClass: { title: 'font-[Almarai] text-[#4b2d1f]', confirmButton: 'bg-green-500' },
+            inputAttributes: { autocapitalize: "off" },
+            showCancelButton: true,
+            cancelButtonText: 'إلغــاء',
+            confirmButtonText: "تحديث",
+            showLoaderOnConfirm: true,
+            preConfirm: async (number) => {
+                try {
+                    const weight = parseFloat(number);
+                    if (!number || isNaN(weight) || weight <= 0) throw new Error("يرجى إدخال وزن صحيح.");
+                    // Call backend to update item, send userID and dateId
+                    const res = await axios.put("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart/update", {
+                        userID,
+                        dateId: id,
+                        weight
+                    });
+                    if (res.data.cart && res.data.cart.items) setCartItems(res.data.cart.items);
+                } catch (error) {
+                    Swal.showValidationMessage(error.message);
+                }
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: `تم تحديث الوزن`, icon: "success", draggable: true });
+            }
+        });
+    };
+
+    // Calculate total price
+    const totalPrice = cartItems.reduce((total, item) => total + (item.price * item.weight), 0);
 
     return (
         <div className="pt-20 w-full h-full bg-[#F7EFE6] scroll-smooth transition-all duration-300">
@@ -227,18 +199,17 @@ export default function Produits() {
             </div>
 
             {datesfilrer.length > 0 ? (
-                <  div className="px-11 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-center gap-[40px]">
+                <div className="px-11 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 justify-center gap-[40px]">
                     {datesfilrer.map((date, index) => (
-                        <motion.div key={date.ID}
+                        <motion.div key={date._id || index}
                             initial={{ y: 50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             transition={{
                                 duration: 0.2, ease: easeInOut,
                                 delay: 0.2 * index
                             }}
-
                         >
-                            <CardDate AddPanier={AddPanier} pn={pn} date={date} />
+                            <CardDate AddPanier={pn} pn={pn} date={date} />
                         </motion.div>
                     ))}
                 </div>
@@ -259,33 +230,29 @@ export default function Produits() {
                     </div>
 
                     <div className="overflow-y-auto h-[calc(100vh-130px)] px-4">
-                        {paniersl.map((u) => (
+                        {cartItems.map((u) => (
                             <div
-                                key={u.ID}
+                                key={u.dateId || u._id || u.ID}
                                 className="w-auto flex text-center justify-center mb-9 bg-white rounded-2xl py-[2em] shadow-md hover:translate-y-3 transition-transform duration-300"
                             >
                                 <div>
-                                    <p className="text-[30px] mb-2 font-bold font-[Almarai]">{u.Name}</p>
-                                    <p className="text-xl text-gray-700">{u.Price} </p>
-
-                                    <p className="text-lg text-gray-600"><span className="font-bold font-[Almarai]">الوزن:</span> {u.weight} كغ</p>
-
-                                    <button onClick={() => updateWeight(u.ID)} className="text-yellow-500 mx-4 mt-4 font-bold font-[Almarai]">تحديث الوزن</button>
-
-                                    <button onClick={() => removeFromCart(u.ID)} className="text-red-500 mt-4 font-bold font-[Almarai]">حذف من السلة</button>
+                                    <div className="text-[30px] mb-2 font-bold font-[Almarai]">{u.name || u.Name}</div>
+                                    <div className="text-xl text-gray-700">{u.price || u.Price} </div>
+                                    <div className="text-lg text-gray-600"><span className="font-bold font-[Almarai]">الوزن:</span> {u.weight} كغ</div>
+                                    <button onClick={() => updateWeight(u.dateId || u._id || u.ID)} className="text-yellow-500 mx-4 mt-4 font-bold font-[Almarai]">تحديث الوزن</button>
+                                    <button onClick={() => removeFromCart(u.dateId || u._id || u.ID)} className="text-red-500 mt-4 font-bold font-[Almarai]">حذف من السلة</button>
                                 </div>
                                 <div className="w-1/2 flex justify-center">
                                     <img
-                                        src={`/PHP/${u.ImagePath}`}
-                                        alt={u.Name}
+                                        src={`/PHP/${u.imagePath || u.ImagePath}`}
+                                        alt={u.name || u.Name}
                                         className="w-[200px] h-[160px] rounded-lg shadow-md"
                                     />
                                 </div>
                             </div>
-
                         ))}
                         {/* الدفع*/}
-                        {totalPrice.toFixed(2) > 0 ? (
+                        {totalPrice > 0 ? (
                             <Link to="/payment"><button className="bg-[#8B4513] text-white mb-5 w-full py-3 rounded-lg font-bold font-[Almarai] hover:bg-[#A0522D] ">
                                 الدفع
                             </button>
