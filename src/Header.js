@@ -46,7 +46,7 @@ export default function Header() {
             </button>
           ) : (
             <button className="bg-[#f39c12] text-[#f7efe6] font-bold px-[20px] py-[8px] rounded border-[2px] border-[#f7efe6] hover:bg-[#f7efe6] hover:border-[#3a8e3a] hover:text-[#3a8e3a] transition duration-[0.6s] ease-in-out">
-              <Link to={`/View/${token}`} className="font-[Almarai]">الحساب</Link>
+              <Link to={`/Profile/${token}`} className="font-[Almarai]">الحساب</Link>
             </button>
           )}
 
@@ -139,7 +139,7 @@ export default function Header() {
               </button>
             ) : (
               <button onClick={() => setAction(!action)} className="bg-[#f39c12] text-[#f7efe6] font-bold px-[20px] py-[8px] rounded border-[2px] border-[#f7efe6] hover:bg-[#f7efe6] hover:border-[#3a8e3a] hover:text-[#3a8e3a] transition duration-[0.6s] ease-in-out">
-                <Link to={`/View/${token}`} className="font-[Almarai]">الحساب</Link>
+                <Link to={`/Profile/${token}`} className="font-[Almarai]">الحساب</Link>
               </button>
             )}
           </li>

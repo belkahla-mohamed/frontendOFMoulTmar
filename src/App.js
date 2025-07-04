@@ -1,10 +1,9 @@
-import React from "react";
+
 import Header from "./Header";
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Login from "./Login";
-import View from "./View";
 import Update from "./Update";
 import Register from "./Register";
 import Home from "./Home";
@@ -14,6 +13,7 @@ import UpdateDate from "./UpdateDate";
 import Produits from "./Produits";
 import Support from "./Support";
 import PaymentPage from "./payment";
+import Profile from "./Profile";
 
 
 export default function App() {
@@ -27,7 +27,7 @@ export default function App() {
         <Route path="/siginup" element={<Register />} />
         <Route path="/support" element={<Support />} />
         <Route path="/payment" element={<PaymentPage/>}/>
-        <Route path="/View/:id" element={<View />} />
+        <Route path="/Profile/:id" element={<Profile />} />
         <Route path="/Update/:id" element={<Update />} />
         {/* <Route path="/ForgetPass" element={<Pass />} /> */}
         <Route path="/Table" element={<TableDates />} />
