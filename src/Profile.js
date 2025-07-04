@@ -14,11 +14,12 @@ export default function Profile() {
     if (!id) {
       navigate('/Produits')
     }
-    axios.post('https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/profile', { id })
+    axios.get(`https://tmar-node-usamohamed2005-9148s-projects.vercel.app/users/profile/${id}`,
+       {headers : {Authorization : `Bearer ${sessionStorage.getItem('token')}`}
+      })
       .then((res) => {
         if (res.data.status === 'success') {
           setView(res.data.user)
-
         }
       })
   }, [id, navigate])

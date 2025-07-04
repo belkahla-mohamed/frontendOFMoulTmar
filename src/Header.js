@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { easeInOut, motion } from "framer-motion";
+import { jwtDecode } from "jwt-decode";
 
 export default function Header() {
 
@@ -11,6 +12,7 @@ export default function Header() {
   const token = sessionStorage.getItem('token');
   const locate = useLocation();
   const [render, setRender] = useState(false)
+  const [idUser, setIdUser] = useState(null);
 
   function logout() {
     setAction(!action);
@@ -27,8 +29,10 @@ export default function Header() {
   }
 
   useEffect(() => {
-
-  }, [render])
+    if(token){
+      setIdUser(jwtDecode(token).id)
+    }
+  }, [render, token, idUser])
 
   return (
     <motion.div className="fixed px-3 bg-[#f7efe6] py-3 text-[#4b2d1f] w-full shadow top-0 left-0 mb-[0px] z-50"
@@ -46,7 +50,7 @@ export default function Header() {
             </button>
           ) : (
             <button className="bg-[#f39c12] text-[#f7efe6] font-bold px-[20px] py-[8px] rounded border-[2px] border-[#f7efe6] hover:bg-[#f7efe6] hover:border-[#3a8e3a] hover:text-[#3a8e3a] transition duration-[0.6s] ease-in-out">
-              <Link to={`/Profile/${token}`} className="font-[Almarai]">الحساب</Link>
+              <Link to={`/Profile/${idUser}`} className="font-[Almarai]">الحساب</Link>
             </button>
           )}
 
@@ -139,7 +143,7 @@ export default function Header() {
               </button>
             ) : (
               <button onClick={() => setAction(!action)} className="bg-[#f39c12] text-[#f7efe6] font-bold px-[20px] py-[8px] rounded border-[2px] border-[#f7efe6] hover:bg-[#f7efe6] hover:border-[#3a8e3a] hover:text-[#3a8e3a] transition duration-[0.6s] ease-in-out">
-                <Link to={`/Profile/${token}`} className="font-[Almarai]">الحساب</Link>
+                <Link to={`/Profile/${idUser}`} className="font-[Almarai]">الحساب</Link>
               </button>
             )}
           </li>
