@@ -1,32 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoIosClose } from "react-icons/io";
 import Swal from "sweetalert2";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const PaymentPage = () => {
   const [showCart, setShowCart] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [cartID, setCartID] = useState(null);
+  const [userID, setUserID] = useState(null);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const token = sessionStorage.getItem('token');
 
-  const [paniersl, setPaniersl] = useState(() => {
-    const saved = localStorage.getItem("paniersl");
-    return saved ? saved : [];
-  });
+  useEffect(() => {
+    if (token) {
+      setUserID(jwtDecode(token).id);
+    }
+  }, [token]);
 
-  const totalPrice = paniersl.reduce((total, item) => total + (item.Price * item.weight), 0);
+  // Fetch cart from backend
+  useEffect(() => {
+    async function fetchCart() {
+      if (!userID) return;
+      try {
+        const res = await axios.post("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart", { userID });
+        if (res.data.items) {
+          setCartItems(res.data.items);
+          setCartID(res.data._id || res.data.cartID || null); // fallback for cartID
+          setTotalPrice(res.data.total || 0);
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'خطأ في تحميل السلة', text: err.message });
+      }
+    }
+    fetchCart();
+  }, [userID]);
 
-  const removeFromCart = (id) => {
-    setPaniersl(paniersl.filter(item => item.ID !== id));
+  // Remove from cart (backend)
+  const removeFromCart = async (id) => {
+    try {
+      const res = await axios.delete("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart/remove", {
+        data: { userID, dateId: id }
+      });
+      if (res.data.cart && res.data.cart.items) {
+        setCartItems(res.data.cart.items);
+        setTotalPrice(res.data.cart.items.reduce((total, item) => total + (item.price * item.weight), 0));
+      }
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'خطأ في حذف العنصر', text: err.message });
+    }
   };
 
+  // Update weight (backend)
   const updateWeight = (id) => {
     Swal.fire({
       title: ":أدخل الوزن الجديد بالكيلوغرام",
       input: "number",
-      customClass: {
-        title: 'font-[Almarai] text-[#4b2d1f]',
-        confirmButton: 'bg-green-500'
-      },
-      inputAttributes: {
-        autocapitalize: "off"
-      },
+      customClass: { title: 'font-[Almarai] text-[#4b2d1f]', confirmButton: 'bg-green-500' },
+      inputAttributes: { autocapitalize: "off" },
       showCancelButton: true,
       cancelButtonText: 'إلغــاء',
       confirmButtonText: "تحديث",
@@ -34,12 +65,16 @@ const PaymentPage = () => {
       preConfirm: async (number) => {
         try {
           const weight = parseFloat(number);
-          if (!number || isNaN(weight) || weight <= 0) {
-            throw new Error("يرجى إدخال وزن صحيح.");
+          if (!number || isNaN(weight) || weight <= 0) throw new Error("يرجى إدخال وزن صحيح.");
+          const res = await axios.put("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/cart/update", {
+            userID,
+            dateId: id,
+            weight
+          });
+          if (res.data.cart && res.data.cart.items) {
+            setCartItems(res.data.cart.items);
+            setTotalPrice(res.data.cart.items.reduce((total, item) => total + (item.price * item.weight), 0));
           }
-          setPaniersl(paniersl.map((item) =>
-            item.ID === id ? { ...item, weight } : item
-          ));
         } catch (error) {
           Swal.showValidationMessage(error.message);
         }
@@ -47,19 +82,46 @@ const PaymentPage = () => {
       allowOutsideClick: () => !Swal.isLoading()
     }).then((result) => {
       if (result.isConfirmed) {
-        Swal.fire({
-          title: `تم تحديث الوزن`,
-          icon: "success",
-          draggable: true
-        });
+        Swal.fire({ title: `تم تحديث الوزن`, icon: "success", draggable: true });
       }
     });
   };
 
-  // تجهيز بيانات الاسم والسعر فقط بشكل نصي
-  const filteredCartData = paniersl
-    .map(({ Name, Price, weight }) => `${Name}: DH${Price} _ الوزن : kg${weight} `)
-    .join("\n"); // Join items into a single string separated by commas
+  // Handle payment form submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    const email = form.email.value;
+    const cardNumber = form.cardNumber.value;
+    const expiryDate = form.expiryDate.value;
+    const cvv = form.cvv.value;
+    try {
+      const res = await axios.post("https://tmar-node-usamohamed2005-9148s-projects.vercel.app/payments", {
+        userID,
+        cartID,
+        amount: totalPrice,
+        name,
+        email,
+        cardNumber,
+        expiryDate,
+        cvv
+      });
+      if (res.data.status === 'success') {
+        Swal.fire({ icon: 'success', title: 'تم الدفع بنجاح', text: res.data.message });
+        // Optionally clear cart here
+      } else {
+        Swal.fire({ icon: 'error', title: 'فشل الدفع', text: res.data.message });
+      }
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'فشل الدفع', text: err.response?.data?.message || err.message });
+    }
+  };
+
+  // Prepare cart data for display
+  const filteredCartData = cartItems
+    .map(({ name, price, weight }) => `${name}: DH${price} _ الوزن : kg${weight} `)
+    .join("\n");
 
   return (
     <div className="w-full h-screen bg-gradient-to-b from-[#f4f4f9] to-[#ffffff] font-[Almarai]">
@@ -71,14 +133,12 @@ const PaymentPage = () => {
             </h2>
             <div onClick={() => setShowCart(!showCart)} className="absolute -top-2 sm:top-0 right-0 ">
               <i className="fa bg-green-600/30 fa-shopping-cart text-[#4b2d1f] relative py-4 px-4 rounded mr-3"></i>
-              <p className="absolute -top-2 right-1 bg-red-500 rounded-[50%] px-2 ">{paniersl.length}</p>
+              <p className="absolute -top-2 right-1 bg-red-500 rounded-[50%] px-2 ">{cartItems.length}</p>
             </div>
           </div>
 
-          {/* نموذج الإرسال إلى Web3Forms */}
-          <form action="https://api.web3forms.com/submit" method="POST" className="space-y-8">
-            <input type="hidden" name="access_key" value="73d9e5bc-dd4a-4ca6-a4eb-2b9115888b34" />
-
+          {/* Payment form to backend */}
+          <form onSubmit={handleSubmit} className="space-y-8">
             <input
               type="text"
               name="name"
@@ -86,26 +146,43 @@ const PaymentPage = () => {
               className="p-4 font-[Almarai] text-end border-2 border-[#ddd] rounded-lg shadow-sm w-full text-lg focus:outline-none focus:ring-2 focus:ring-[#4b2d1f] focus:border-[#4b2d1f] transition-all"
               required
             />
-
+            <input
+              type="email"
+              name="email"
+              placeholder="البريد الإلكتروني"
+              className="p-4 font-[Almarai] text-end border-2 border-[#ddd] rounded-lg shadow-sm w-full text-lg focus:outline-none focus:ring-2 focus:ring-[#4b2d1f] focus:border-[#4b2d1f] transition-all"
+              required
+            />
             <input
               type="text"
-              name="address"
-              placeholder="العنوان"
+              name="cardNumber"
+              placeholder="رقم البطاقة"
               className="p-4 font-[Almarai] text-end border-2 border-[#ddd] rounded-lg shadow-sm w-full text-lg focus:outline-none focus:ring-2 focus:ring-[#4b2d1f] focus:border-[#4b2d1f] transition-all"
               required
+              maxLength={16}
             />
-
             <input
-              type="tel"
-              name="phone"
-              placeholder="رقم الهاتف"
+              type="text"
+              name="expiryDate"
+              placeholder="تاريخ الانتهاء (MM/YY)"
               className="p-4 font-[Almarai] text-end border-2 border-[#ddd] rounded-lg shadow-sm w-full text-lg focus:outline-none focus:ring-2 focus:ring-[#4b2d1f] focus:border-[#4b2d1f] transition-all"
               required
             />
-
-            {/* إرسال البيانات بشكل نصي في حقل مخفي */}
-            <input type="hidden" name="cart_data" value={filteredCartData} />
-
+            <input
+              type="text"
+              name="cvv"
+              placeholder="CVV"
+              className="p-4 font-[Almarai] text-end border-2 border-[#ddd] rounded-lg shadow-sm w-full text-lg focus:outline-none focus:ring-2 focus:ring-[#4b2d1f] focus:border-[#4b2d1f] transition-all"
+              required
+              maxLength={3}
+            />
+            {/* Show cart summary */}
+            <textarea
+              value={filteredCartData}
+              readOnly
+              className="w-full p-2 border rounded bg-gray-100 text-end font-[Almarai]"
+              rows={cartItems.length + 1}
+            />
             <button
               type="submit"
               className="w-full bg-[#4b2d1f] text-white py-3 rounded-lg text-lg font-semibold hover:bg-[#5c3928] transition-all ease-in-out duration-300"
@@ -126,17 +203,17 @@ const PaymentPage = () => {
         </div>
 
         <div className="overflow-y-auto flex py-20 flex-col items-center h-[calc(100vh-130px)] px-4">
-          {paniersl.map((u) => (
-            <div key={u.ID} className="w-full flex text-center justify-center mb-9 bg-white rounded-2xl py-[2em] shadow-md hover:translate-y-3 transition-transform duration-300">
+          {cartItems.map((u) => (
+            <div key={u.dateId || u._id || u.ID} className="w-full flex text-center justify-center mb-9 bg-white rounded-2xl py-[2em] shadow-md hover:translate-y-3 transition-transform duration-300">
               <div>
-                <p className="text-[30px] mb-2 font-bold font-[Almarai]">{u.Name}</p>
-                <p className="text-xl text-gray-700">{u.Price} </p>
-                <p className="text-lg text-gray-600"><span className="font-bold font-[Almarai]">الوزن:</span> {u.weight} كغ</p>
-                <button onClick={() => updateWeight(u.ID)} className="text-yellow-500 mx-4 mt-4 font-bold font-[Almarai]">تحديث الوزن</button>
-                <button onClick={() => removeFromCart(u.ID)} className="text-red-500 mt-4 font-bold font-[Almarai]">حذف من السلة</button>
+                <div className="text-[30px] mb-2 font-bold font-[Almarai]">{u.name || u.Name}</div>
+                <div className="text-xl text-gray-700">{u.price || u.Price} </div>
+                <div className="text-lg text-gray-600"><span className="font-bold font-[Almarai]">الوزن:</span> {u.weight} كغ</div>
+                <button onClick={() => updateWeight(u.dateId || u._id || u.ID)} className="text-yellow-500 mx-4 mt-4 font-bold font-[Almarai]">تحديث الوزن</button>
+                <button onClick={() => removeFromCart(u.dateId || u._id || u.ID)} className="text-red-500 mt-4 font-bold font-[Almarai]">حذف من السلة</button>
               </div>
               <div className="w-1/2 flex justify-center">
-                <img src={`/PHP/${u.ImagePath}`} alt={u.Name} className="w-[160px] h-[160px] rounded-lg" />
+                <img src={`/PHP/${u.imagePath || u.ImagePath}`} alt={u.name || u.Name} className="w-[160px] h-[160px] rounded-lg" />
               </div>
             </div>
           ))}
